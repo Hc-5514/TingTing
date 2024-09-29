@@ -40,16 +40,16 @@
 
 <br>
 
-| ![](https://velog.velcdn.com/images/heeung/post/44934abd-f32b-48e6-9311-dfaa555ecf4c/image.jpg){ width="250" } | ![](https://velog.velcdn.com/images/heeung/post/182129be-d09e-4740-9e96-c42479d90c04/image.jpg){ width="250" } | ![](https://velog.velcdn.com/images/heeung/post/6114f312-271b-4639-82b6-d7aefbd68802/image.jpg){ width="250" } |
+| ![](https://velog.velcdn.com/images/heeung/post/44934abd-f32b-48e6-9311-dfaa555ecf4c/image.jpg) | ![](https://velog.velcdn.com/images/heeung/post/182129be-d09e-4740-9e96-c42479d90c04/image.jpg) | ![](https://velog.velcdn.com/images/heeung/post/6114f312-271b-4639-82b6-d7aefbd68802/image.jpg) |
 | ---------------- | --------------- | ---------------- |
-| ![](https://velog.velcdn.com/images/heeung/post/bc73ceda-9cbd-499a-87b7-b767ced70ee9/image.jpg){ width="250" } | ![](https://velog.velcdn.com/images/heeung/post/f8329709-190c-4f8d-a5b4-0499eecd80d6/image.jpg){ width="250" } | |
+| ![](https://velog.velcdn.com/images/heeung/post/bc73ceda-9cbd-499a-87b7-b767ced70ee9/image.jpg) | ![](https://velog.velcdn.com/images/heeung/post/f8329709-190c-4f8d-a5b4-0499eecd80d6/image.jpg) | |
 
 <br>
 
 <div id="2"></div>
 
 ## 📱 서비스 흐름도
-![](https://velog.velcdn.com/images/heeung/post/8c2d42c3-bfd6-4890-b326-c154c16536e6/image.png){ width="800" }
+![](https://velog.velcdn.com/images/heeung/post/8c2d42c3-bfd6-4890-b326-c154c16536e6/image.png)
 
 <br>
 
@@ -59,19 +59,19 @@
 
 ### Android
 
-![](https://velog.velcdn.com/images/heeung/post/38b5d4e8-a6f1-4afd-9eb6-db2ceb226f86/image.png){ width="400" }
+![](https://velog.velcdn.com/images/heeung/post/38b5d4e8-a6f1-4afd-9eb6-db2ceb226f86/image.png)
 
 ### Frontend
 
-![](https://velog.velcdn.com/images/heeung/post/a6579524-1763-4bb6-b167-95d1ea2cf00e/image.png){ width="400" }
+![](https://velog.velcdn.com/images/heeung/post/a6579524-1763-4bb6-b167-95d1ea2cf00e/image.png)
 
 ### Backend
 
-![](https://velog.velcdn.com/images/heeung/post/341c0274-6bc4-4d30-be58-78cc1734ae26/image.png){ width="400" }
+![](https://velog.velcdn.com/images/heeung/post/341c0274-6bc4-4d30-be58-78cc1734ae26/image.png)
 
 ### Communication
 
-![](https://velog.velcdn.com/images/heeung/post/8d619202-6225-43c0-8b90-0343186f7456/image.png){ width="500" }
+![](https://velog.velcdn.com/images/heeung/post/8d619202-6225-43c0-8b90-0343186f7456/image.png)
 
 <br>
 
@@ -79,13 +79,13 @@
 
 ## 📃 데이터 구조
 
-![](https://velog.velcdn.com/images/heeung/post/afe8a885-69f1-4706-971e-7bed2cedabf4/image.png){ width="800" }
+![](https://velog.velcdn.com/images/heeung/post/afe8a885-69f1-4706-971e-7bed2cedabf4/image.png)
 
 <br>
 
 ## 🔎 시스템 구조도
 
-![](https://velog.velcdn.com/images/heeung/post/51c286a9-4eab-48aa-8262-2e6500825f96/image.png){ width="800" }
+![](https://velog.velcdn.com/images/heeung/post/51c286a9-4eab-48aa-8262-2e6500825f96/image.png)
 
 <br>
 
