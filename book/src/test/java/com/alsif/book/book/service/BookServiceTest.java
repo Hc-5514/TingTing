@@ -57,6 +57,7 @@ class BookServiceTest {
 	private BookService bookService;
 
 	@Test
+	// 좌석과 포인트가 모두 정상일 때 예매 성공 처리와 후속 저장 작업이 수행되는지 검증한다.
 	void bookSuccess() {
 		List<Long> seatSeqs = List.of(1L, 2L);
 		ConcertSeatBookRequestDto requestDto = ConcertSeatBookRequestDto.builder()
@@ -75,23 +76,27 @@ class BookServiceTest {
 		when(ticketRepository.save(any(Ticket.class))).thenReturn(savedTicket);
 		when(pointRepository.findTop1ByUser_SeqOrderBySeqDesc(1)).thenReturn(Optional.of(point));
 
+		// 예매 성공 후 좌석 상태 변경, 티켓-좌석 저장, 포인트 차감이 모두 이어져야 한다.
 		SuccessResponseDto response = bookService.book(1, 10, requestDto);
 
 		assertEquals("true", response.getMessage());
 		verify(concertSeatInfoRepository).updateBooks(seatSeqs, true);
 		verify(jdbcRepository).saveTicketSeats(seatSeqs, savedTicket);
 
+		// 총 좌석 가격(1000 + 2000)만큼 pay는 음수로 기록되고, total은 차감된 잔액이어야 한다.
 		ArgumentCaptor<Point> pointCaptor = ArgumentCaptor.forClass(Point.class);
 		verify(pointRepository).save(pointCaptor.capture());
 		assertEquals(-3000, pointCaptor.getValue().getPay());
 		assertEquals(2000, pointCaptor.getValue().getTotal());
 
+		// 예매가 완료된 좌석은 Redis에도 점유 상태로 기록되며, 실패 정리 로직은 호출되지 않아야 한다.
 		verify(redisService).setValue(BookService.CONCERT_SEAT_INFO_KEY + 1L, "1");
 		verify(redisService).setValue(BookService.CONCERT_SEAT_INFO_KEY + 2L, "1");
 		verify(taskManager, never()).removeTask(seatSeqs);
 	}
 
 	@Test
+	// Redis에 이미 점유 정보가 있으면 DB 조회 이전에 즉시 예매를 차단해야 한다.
 	void bookFailsWhenSeatAlreadyReservedInRedis() {
 		List<Long> seatSeqs = List.of(1L, 2L);
 		ConcertSeatBookRequestDto requestDto = ConcertSeatBookRequestDto.builder()
@@ -104,12 +109,14 @@ class BookServiceTest {
 			() -> bookService.book(1, 10, requestDto));
 
 		assertEquals(ErrorCode.NOT_AVAILABLE_SEAT, exception.getErrorCode());
+		// 선점 실패이므로 TaskManager 정리만 수행되고 실제 예매 저장 로직은 진행되면 안 된다.
 		verify(taskManager).removeTask(seatSeqs);
 		verify(concertSeatInfoRepository, never()).updateBooks(any(), eq(true));
 		verify(ticketRepository, never()).save(any(Ticket.class));
 	}
 
 	@Test
+	// Redis에는 비어 있어도 DB 기준으로 이미 예매된 좌석이 있으면 실패해야 한다.
 	void bookFailsWhenSeatAlreadyBookedInDatabase() {
 		List<Long> seatSeqs = List.of(1L, 2L);
 		ConcertSeatBookRequestDto requestDto = ConcertSeatBookRequestDto.builder()
@@ -128,12 +135,14 @@ class BookServiceTest {
 			() -> bookService.book(1, 10, requestDto));
 
 		assertEquals(ErrorCode.NOT_AVAILABLE_SEAT, exception.getErrorCode());
+		// DB 검증 단계에서 막혔기 때문에 좌석 상태 변경과 티켓 저장은 모두 발생하지 않아야 한다.
 		verify(taskManager).removeTask(seatSeqs);
 		verify(concertSeatInfoRepository, never()).updateBooks(any(), eq(true));
 		verify(ticketRepository, never()).save(any(Ticket.class));
 	}
 
 	@Test
+	// 좌석 점유에는 성공했더라도 보유 포인트가 부족하면 결제 단계에서 예매가 실패해야 한다.
 	void bookFailsWhenUserLacksPoint() {
 		List<Long> seatSeqs = List.of(1L, 2L);
 		ConcertSeatBookRequestDto requestDto = ConcertSeatBookRequestDto.builder()
@@ -156,9 +165,11 @@ class BookServiceTest {
 			() -> bookService.book(1, 10, requestDto));
 
 		assertEquals(ErrorCode.LACK_POINT, exception.getErrorCode());
+		// 현재 구현 기준으로 좌석 상태 변경과 티켓 저장 후 포인트 차감 단계에서 실패가 발생한다.
 		verify(concertSeatInfoRepository).updateBooks(seatSeqs, true);
 		verify(jdbcRepository).saveTicketSeats(seatSeqs, savedTicket);
 		verify(taskManager).removeTask(seatSeqs);
+		// 결제가 완료되지 않았으므로 포인트 이력 저장과 Redis 점유 확정은 수행되지 않아야 한다.
 		verify(pointRepository, never()).save(any(Point.class));
 		verify(redisService, never()).setValue(any(), any());
 	}
