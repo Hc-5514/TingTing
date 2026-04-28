@@ -14,6 +14,8 @@ import com.alsif.book.book.service.BookService;
 import com.alsif.book.concert.dto.concerthall.ConcertSeatBookRequestDto;
 import com.alsif.book.concert.dto.concerthall.SuccessResponseDto;
 import com.alsif.book.global.TaskManager;
+import com.alsif.book.global.constant.ErrorCode;
+import com.alsif.book.global.exception.CustomException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,23 +36,20 @@ public class BookController {
 		log.info("===== 선택 좌석 예매 요청 시작, url={}, concertDetailSeq: {}, {} =====",
 			"/concerts", concertDetailSeq, requestDto.toString());
 
-		while (!taskManager.checkTask(requestDto.getSeatSeqs())) {
-			try {
-				Thread.sleep(10);
-			} catch (InterruptedException e) {
-				throw new RuntimeException(e);
-			}
+		boolean acquired = taskManager.tryAcquire(requestDto.getSeatSeqs());
+		if (!acquired) {
+			throw new CustomException(ErrorCode.NOT_AVAILABLE_SEAT);
 		}
 
-		taskManager.addTask(requestDto.getSeatSeqs());
-
 		StopWatch stopWatch = new StopWatch();
-		stopWatch.start();
-		SuccessResponseDto successResponseDto
-			= bookService.book(userSeq, concertDetailSeq, requestDto);
-		stopWatch.stop();
-
-		taskManager.removeTask(requestDto.getSeatSeqs());
+		SuccessResponseDto successResponseDto;
+		try {
+			stopWatch.start();
+			successResponseDto = bookService.book(userSeq, concertDetailSeq, requestDto);
+			stopWatch.stop();
+		} finally {
+			taskManager.release(requestDto.getSeatSeqs());
+		}
 
 		log.info("===== 선택 좌석 예매 요청 종료, 소요시간: {} milliseconds =====", stopWatch.getTotalTimeMillis());
 		return new ResponseEntity<>(successResponseDto, HttpStatus.OK);
