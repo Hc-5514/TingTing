@@ -2,6 +2,7 @@ package com.alsif.book.book.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -61,6 +62,7 @@ class BookControllerTest {
 			.message("true")
 			.build();
 
+		when(taskManager.tryAcquire(requestDto.getSeatSeqs())).thenReturn(true);
 		when(bookService.book(7, 11, requestDto)).thenReturn(successResponseDto);
 
 		// Controller 호출 시 memberSeq와 concertSeq가 Service로 올바르게 전달되는지도 함께 확인한다.
@@ -69,9 +71,23 @@ class BookControllerTest {
 		// HTTP 응답과 Task 생명주기, 그리고 Service 위임 여부를 한 번에 검증한다.
 		assertEquals(HttpStatus.OK, response.getStatusCode());
 		assertEquals("true", response.getBody().getMessage());
-		verify(taskManager).addTask(requestDto.getSeatSeqs());
-		verify(taskManager).removeTask(requestDto.getSeatSeqs());
+		verify(taskManager).tryAcquire(requestDto.getSeatSeqs());
+		verify(taskManager).release(requestDto.getSeatSeqs());
 		verify(bookService).book(7, 11, requestDto);
+	}
+
+	@Test
+	void bookFailsWhenLockAcquisitionFails() {
+		ConcertSeatBookRequestDto requestDto = ConcertSeatBookRequestDto.builder()
+			.seatSeqs(List.of(1L, 2L))
+			.build();
+
+		when(taskManager.tryAcquire(requestDto.getSeatSeqs())).thenReturn(false);
+
+		CustomException exception = assertThrows(CustomException.class, () -> bookController.book(11, 7, requestDto));
+
+		assertEquals(ErrorCode.NOT_AVAILABLE_SEAT, exception.getErrorCode());
+		verify(taskManager).tryAcquire(requestDto.getSeatSeqs());
 	}
 
 	@Test
@@ -94,11 +110,11 @@ class BookControllerTest {
 			List<Long> seatSeqs = requestDto.getSeatSeqs();
 
 			// 실제 예매 흐름처럼 좌석 점유 여부를 확인하고, 하나라도 겹치면 실패로 처리한다.
-			synchronized (bookedSeats) {
-				if (seatSeqs.stream().anyMatch(bookedSeats::contains)) {
-					realTaskManager.removeTask(seatSeqs);
-					throw new CustomException(ErrorCode.NOT_AVAILABLE_SEAT);
-				}
+				synchronized (bookedSeats) {
+					if (seatSeqs.stream().anyMatch(bookedSeats::contains)) {
+						realTaskManager.release(seatSeqs);
+						throw new CustomException(ErrorCode.NOT_AVAILABLE_SEAT);
+					}
 				bookedSeats.addAll(seatSeqs);
 			}
 
